@@ -8,11 +8,17 @@
     "render": "node scripts/render.mjs",
     "still": "node scripts/render.mjs --still",
     "preview": "node scripts/serve.mjs",
-    "analyze": "python3 -I scripts/analyze.py"
+    "analyze": "python3 -I scripts/analyze.py",
+    "prep": "python3 -I scripts/prep.py",
+    "asset": "python3 -I scripts/asset.py",
+    "test:frames": "bash scripts/test-frames.sh",
+    "sfx": "bash scripts/make-sfx.sh"
   },
   "dependencies": {
     "@fontsource/bebas-neue": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
     "@fontsource/inter": "5.3.0",
+    "@fontsource/montserrat": "5.3.0",
     "@fontsource/syne": "5.3.0",
     "gsap": "3.15.0",
     "playwright-core": "1.56.1"

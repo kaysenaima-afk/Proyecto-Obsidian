@@ -13,7 +13,7 @@ npm install
 npx playwright-core install chromium
 ```
 
-Requiere Node 18+, ffmpeg y, para el analizador, Python 3 con `numpy` y `Pillow`.
+Requiere Node 18+, ffmpeg y Python 3 con `pip install -r requirements.txt` (analizador y editor de pantalla dividida). El modelo de transcripción (~490 MB, Parakeet TDT v3 vía sherpa-onnx) se descarga solo la primera vez desde GitHub a `~/.cache/motion-studio/models/`.
 
 ## Uso
 
@@ -37,6 +37,50 @@ Otras opciones del render: `--fps`, `--from/--to` (segundos), `--crf` (16 por de
 const post = { grain: 10, blurBoost: [[2.06, 2.98], [8.38, 9.12]], boostSamples: 16 };
 MotionComp.create({ ..., post }, build);
 ```
+
+## Editor de pantalla dividida (talking head → reel)
+
+Estilo "pantalla dividida": B-roll arriba, speaker abajo, subtítulos en la costura, énfasis en serif itálica, hook de apertura. Detalle del estilo en `20-knowledge/motion-design/estilos-de-referencia.md`.
+
+```bash
+# 1. Preparar: transcribe (Parakeet, tiempos por palabra), corta silencios, encuadra la cara, borrador del plan
+python3 -I scripts/prep.py refs/mi-video.mp4 --name mi-video --glossary "Cloud Code=Claude Code;Cloud=Claude"
+# 2. Assets de B-roll (opcional): capturas → assets/, grabaciones → secuencias de frames
+python3 -I scripts/asset.py comps/mi-video captura.png
+python3 -I scripts/asset.py comps/mi-video demo.mov --as demo --start 3 --dur 6
+# 3. Editar comps/mi-video/plan.json (leer transcript.txt) y revisar con stills
+node scripts/render.mjs comps/mi-video --still 1.5,4,8
+# 4. Render final (voz + SFX + música, -14 LUFS)
+node scripts/render.mjs comps/mi-video
+```
+
+Opciones de `prep.py`: `--gap 0.4` (silencios más largos se cortan), `--pad 0.08` (aire alrededor de la voz), `--no-cut`, `--theme fyg|ref`, `--music tema.mp3`, `--force` (regenera el borrador del plan).
+
+### plan.json
+
+```jsonc
+{
+  "theme": { "accent": "#C8F135", "brand": "#631336", "light": "#F3EEF0", "dark": "#120910", "ink": "#1A0A12" },
+  "music": "media/tema.mp3", "musicVolume": 0.12, "sfx": true,
+  "highlightWords": ["Claude", "gratis"],          // palabras en color de acento en los subtítulos
+  "segments": [
+    { "start": 0,   "layout": "hook", "title": "Claude Code sin límites", "titleWords": 0, "image": "assets/ilustracion.png" },
+    { "start": 3.0, "layout": "split",   "broll": { "type": "terminal", "lines": ["$ claude", "⚠ Usage limit reached"] } },
+    { "start": 4.4, "layout": "split",   "broll": { "type": "flow", "root": "Claude Code", "nodes": ["DeepSeek", "Kimi", "GLM"], "tag": "FREE" } },
+    { "start": 7.0, "layout": "speaker", "overlay": { "text": "sin parar|tu sesión", "style": "serif", "at": 8.3 } },
+    { "start": 9.6, "layout": "broll",   "transition": "whip", "broll": { "type": "icon", "items": [{ "label": "Claude", "glyph": "✳", "color": "#E8793A" }] } }
+  ]
+}
+```
+
+- **layout:** `split` · `speaker` (pantalla completa; el zoom alterna 1 / 1.14 solo) · `broll` · `hook`
+- **broll.type:** `image` (`src`, `motion`: push · scroll · pan-left · pan-right · none, `fit`) · `clip` (frames de `asset.py`) · `icon` (`items` [{label, glyph | image, color}], carrusel) · `title` (`text`, `sub`, `style`: sans · serif) · `list` (`title`, `items`) · `stat` (`value`, `prefix`, `suffix`, `label`) · `flow` (`root`, `nodes`, `tag`) · `browser` (`url`, `title`, `image`, `button`) · `terminal` (`lines`)
+- **broll.bg:** `dark` · `light` · `brand` · `accent`
+- **overlay:** `text` (`|` = salto de línea), `style` (serif · bold · outline), `at` (segundo exacto), `y` (0–1)
+- **transition:** `cut` (default) · `zoom` · `leak` · `whip` · `flash` — con whoosh automático y blur boost
+- **por segmento:** `zoom` (forzar zoom del speaker), `captions: false`
+
+El motor (`lib/talk.js`) sincroniza los frames del speaker por seek. Los subtítulos salen de `words.json`, el audio se mezcla en el render (voz + música en loop + SFX de `assets/sfx/`) y se normaliza a −14 LUFS / −1 dBTP.
 
 ## Crear una composición
 
@@ -82,6 +126,11 @@ lib/server.mjs     servidor estático (con byte ranges para <video>)
 scripts/render.mjs render a MP4 / MOV / PNG
 scripts/serve.mjs  preview en vivo
 scripts/analyze.py análisis de videos de referencia
+scripts/prep.py    talking head → transcripción, cortes, cara, frames, borrador del plan
+scripts/asset.py   agrega imágenes / clips de B-roll a un proyecto
+scripts/test-frames.sh  test de regresión: cada frame del MP4 = su tiempo exacto
+lib/talk.js/.css   motor del editor de pantalla dividida
+assets/sfx/        kit de SFX sintetizados (whoosh, pop, tick, impact)
 comps/             composiciones (una carpeta por video)
 refs/ analysis/ out/   ignorados por git
 ```

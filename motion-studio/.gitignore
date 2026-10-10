@@ -3,3 +3,5 @@ out/
 analysis/
 refs/
 __pycache__/
+comps/*/media/
+comps/test-*/

@@ -133,8 +133,10 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `ms-${compName}-`));
 
 // Blur boost: very fast moves (whip transitions) strobe into visible copies with few subframes.
 // Like AE's adaptive motion blur, frames inside post.blurBoost ranges get more samples.
-const boostRanges = sub > 1 ? (meta.post.blurBoost || []) : [];
-const boostSamples = Math.max(sub, parseInt(opts.boost ?? meta.post.boostSamples ?? 16, 10) || sub);
+// Boost applies when motion blur is on, or always if the composition asks (post.alwaysBoost) — e.g. talk edits
+// render without base blur but still want smeared whip transitions. --boost 0 disables it.
+const boostRanges = (sub > 1 || meta.post.alwaysBoost) && opts.boost !== '0' ? (meta.post.blurBoost || []) : [];
+const boostSamples = Math.max(sub, parseInt(opts.boost ?? meta.post.boostSamples ?? 12, 10) || sub);
 const subAt = (f) => {
   const t = from + f / fps;
   return boostRanges.some(([a, b]) => t >= a && t <= b) ? boostSamples : sub;
@@ -162,12 +164,25 @@ const ticker = setInterval(() => {
 }, 1000);
 
 async function renderChunk(p, { a, b, sub: n }, idx) {
-  const seg = path.join(tmp, `seg_${String(idx).padStart(4, '0')}.mkv`);
-  const args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps * n), '-c:v', 'png', '-i', '-'];
+  // NUT keeps an exact 1/fps timebase (MKV rounds to ms and gives 1-frame segments zero duration).
+  const seg = path.join(tmp, `seg_${String(idx).padStart(4, '0')}.nut`);
+  const fmt = alpha ? 'rgba' : 'rgb24';
+  // Stage 1 decodes the PNG stream to raw frames of ONE fixed pixel format. Chromium switches between RGB
+  // and RGBA PNGs depending on content; fed straight into tmix, every switch re-initialised the filter
+  // graph, reset the averaging window and silently dropped frames.
+  const dec = spawn('ffmpeg', ['-v', 'error', '-f', 'image2pipe', '-c:v', 'png', '-i', '-',
+    '-vf', `scale=${outW}:${outH}`, '-f', 'rawvideo', '-pix_fmt', fmt, '-'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  // Stage 2 averages subframes (motion blur) and writes a lossless segment.
+  const args = ['-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', fmt, '-s', `${outW}x${outH}`,
+    '-framerate', String(fps * n), '-i', '-'];
   if (n > 1) args.push('-vf', [`tmix=frames=${n}`, `select='eq(mod(n\\,${n})\\,${n - 1})'`, `setpts=N/(${fps}*TB)`].join(','));
   args.push('-r', String(fps), '-c:v', 'ffv1', '-pix_fmt', alpha ? 'bgra' : 'bgr0', seg);
-  await run('ffmpeg', args, {
+  let decErr = '';
+  dec.stderr.on('data', (d) => { decErr += d; });
+  const decDone = new Promise((res, rej) => dec.on('close', (c) => (c === 0 ? res() : rej(new Error('png decode failed\n' + decErr.slice(-2000))))));
+  await Promise.all([decDone, run('ffmpeg', args, {
     input: (proc) => {
+      dec.stdout.pipe(proc.stdin);
       (async () => {
         try {
           for (let f = a; f < b; f++) {
@@ -175,19 +190,20 @@ async function renderChunk(p, { a, b, sub: n }, idx) {
               const offset = n > 1 ? ((s + 0.5) / n - 0.5) * shutter : 0;
               const t = Math.min(Math.max(from + (f + offset) / fps, 0), meta.duration);
               const png = await capture(p, t);
-              if (!proc.stdin.write(png)) await new Promise((r) => proc.stdin.once('drain', r));
+              if (!dec.stdin.write(png)) await new Promise((r) => dec.stdin.once('drain', r));
             }
             done++;
           }
         } catch (e) {
           console.error('\n[worker]', e);
+          dec.kill('SIGKILL');
           proc.kill('SIGKILL');
         } finally {
-          proc.stdin.end();
+          dec.stdin.end();
         }
       })();
     },
-  });
+  })]);
   return seg;
 }
 
@@ -206,15 +222,26 @@ try {
   process.stdout.write(`\r  ${totalFrames}/${totalFrames} frames · capture ${((Date.now() - started) / 1000).toFixed(1)}s            \n`);
 
   const list = path.join(tmp, 'list.txt');
-  fs.writeFileSync(list, segs.map((s) => `file '${s}'`).join('\n'));
+  // Explicit per-segment durations: frame-exact concatenation whatever each container reports.
+  fs.writeFileSync(list, segs.map((s, i) => `file '${s}'\nduration ${((chunks[i].b - chunks[i].a) / fps).toFixed(6)}`).join('\n'));
   const ext = alpha ? '.mov' : '.mp4';
   const out = path.resolve(opts.out ?? path.join(ROOT, 'out', compName + ext));
   fs.mkdirSync(path.dirname(out), { recursive: true });
 
   const args = ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list];
-  if (opts.audio) {
-    if (opts['audio-start']) args.push('-ss', String(opts['audio-start']));
-    args.push('-i', path.resolve(opts.audio));
+  // Audio: --audio (one track) and/or post.audio declared by the composition
+  // [{ src, at, volume, loop, from }] — src relative to the composition folder or absolute from ROOT ('/assets/…').
+  const tracks = [];
+  if (opts.audio) tracks.push({ file: path.resolve(opts.audio), at: 0, volume: parseFloat(opts.volume ?? 1), from: parseFloat(opts['audio-start'] ?? 0) });
+  for (const tr of meta.post.audio || []) {
+    const file = tr.src.startsWith('/') ? path.join(ROOT, tr.src) : path.join(path.dirname(comp.abs), tr.src);
+    if (!fs.existsSync(file)) { console.warn(`[audio] missing ${tr.src}`); continue; }
+    tracks.push({ file, at: tr.at ?? 0, volume: tr.volume ?? 1, loop: tr.loop, from: tr.from ?? 0 });
+  }
+  for (const tr of tracks) {
+    if (tr.loop) args.push('-stream_loop', '-1');
+    if (tr.from) args.push('-ss', String(tr.from));
+    args.push('-i', tr.file);
   }
   const dur = (to - from).toFixed(3);
   const toYuv = 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p';
@@ -242,16 +269,31 @@ try {
       '-movflags', '+faststart'
     );
   }
-  if (opts.audio) {
-    const fadeOut = Math.max(0, (to - from) - 0.6).toFixed(3);
-    args.push('-map', '1:a', '-af', `afade=t=out:st=${fadeOut}:d=0.6,volume=${opts.volume ?? 1}`, '-t', dur, '-c:a', 'aac', '-b:a', '192k');
+  if (tracks.length) {
+    const fadeOut = Math.max(0, (to - from) - 0.5).toFixed(3);
+    // Each track: shift to the render window, delay to its start, set its gain; then mix and normalise to
+    // social loudness (-14 LUFS, -1 dBTP). A single track keeps its own level apart from the fade.
+    const chains = tracks.map((tr, i) => {
+      const shift = tr.at - from;
+      const pre = shift < 0 ? `atrim=start=${(-shift).toFixed(3)},asetpts=PTS-STARTPTS,` : `adelay=${Math.round(shift * 1000)}:all=1,`;
+      return `[${i + 1}:a]aformat=sample_rates=48000:channel_layouts=stereo,${pre}volume=${tr.volume}[a${i}]`;
+    });
+    const mix = tracks.length > 1
+      ? `${tracks.map((_, i) => `[a${i}]`).join('')}amix=inputs=${tracks.length}:normalize=0:duration=longest,` +
+        'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.89:level=false,'   // loudnorm runs at 192 kHz; limiter guarantees ≤ -1 dBTP
+      : '[a0]';
+    const graph = `${chains.join(';')};${mix}atrim=end=${dur},afade=t=out:st=${fadeOut}:d=0.5[aout]`;
+    const fcIdx = args.indexOf('-filter_complex');
+    if (fcIdx >= 0) args[fcIdx + 1] += ';' + graph;
+    else args.push('-filter_complex', graph);
+    args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000');
   }
   args.push('-r', String(fps), '-frames:v', String(totalFrames), out);
   await run('ffmpeg', args);
   console.log(`✔ ${path.relative(process.cwd(), out)}  (${(fs.statSync(out).size / 1e6).toFixed(1)} MB, ${((Date.now() - started) / 1000).toFixed(1)}s total)`);
 } finally {
   clearInterval(ticker);
-  fs.rmSync(tmp, { recursive: true, force: true });
+  if (process.env.MS_KEEP_TMP) console.log('tmp kept:', tmp); else fs.rmSync(tmp, { recursive: true, force: true });
   await browser.close();
   server.close();
 }

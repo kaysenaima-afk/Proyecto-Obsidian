@@ -38,6 +38,10 @@
     });
   }
 
+  // Async hooks run on every seek (frame sequences, canvases, anything that is not a GSAP tween).
+  const seekHooks = [];
+  function onSeek(fn) { seekHooks.push(fn); }
+
   function create(config, build) {
     const cfg = Object.assign(
       { width: 1080, height: 1920, fps: 30, duration: null, seed: 1, background: '#000' },
@@ -72,6 +76,7 @@
         anim.pause();
         anim.currentTime = currentTime * 1000;
       }
+      for (const hook of seekHooks) await hook(currentTime);
       const videos = document.querySelectorAll('video[data-sync]');
       if (videos.length) {
         await Promise.all([...videos].map((v) => seekVideo(v, currentTime - parseFloat(v.dataset.offset || 0))));
@@ -220,5 +225,5 @@
     return window.__motion;
   }
 
-  window.MotionComp = { create, mulberry32, RENDER };
+  window.MotionComp = { create, onSeek, mulberry32, RENDER };
 })();

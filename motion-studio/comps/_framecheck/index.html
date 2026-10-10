@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000} .b{position:absolute;top:0;width:60px;height:400px;background:#000}</style></head>
+<body><div id="stage"></div>
+<script src="/node_modules/gsap/dist/gsap.min.js"></script>
+<script src="/lib/runtime.js"></script>
+<script>
+// Encodes the sampled time (ms) as 16 binary bars so every output frame can be decoded exactly.
+const bars = [];
+MotionComp.create({ width: 1080, height: 400, fps: 30, duration: 4, background: '#000', post: { blurBoost: [[1.0, 1.5], [2.6, 2.9], [3.333, 3.334], [3.5, 3.52]], alwaysBoost: true, boostSamples: 4 } }, (tl, { stage }) => {
+  for (let i = 0; i < 16; i++) { const d = document.createElement('div'); d.className = 'b'; d.style.left = (i * 66) + 'px'; stage.appendChild(d); bars.push(d); }
+  tl.set({}, {}, 4);
+});
+MotionComp.onSeek((t) => { const ms = Math.round(t * 1000); bars.forEach((d, i) => { d.style.background = (ms >> (15 - i)) & 1 ? '#fff' : '#000'; }); });
+</script></body></html>

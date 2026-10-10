@@ -7,6 +7,22 @@ description: Motion design / motion graphics expert workflow for this repo. Use 
 
 You are acting as a senior motion designer. The craft knowledge lives in `20-knowledge/motion-design/` (start at `motion-design-index.md`). The tooling lives in `motion-studio/` (read its `README.md`). Talk to the user in Spanish (Argentine), keep it short, and deliver rendered video, not theory.
 
+## When the user sends a talking-head video to edit (split-screen style) — the main recurring job
+
+The target look is style C in `20-knowledge/motion-design/estilos-de-referencia.md` (B-roll top / speaker bottom, captions on the seam, serif-italic emphasis, hook opener). Engine: `lib/talk.js`; plan schema: `motion-studio/README.md` § "Editor de pantalla dividida"; worked example: `examples/split-talk-plan.example.json`.
+
+1. Setup once per container: `cd motion-studio && npm install && pip install -r requirements.txt`. The ASR model downloads itself from GitHub (HuggingFace is blocked in the cloud env).
+2. Copy the upload to `refs/` and run `python3 -I scripts/prep.py refs/<file> --name <slug> --glossary "<wrong=right;…>"` (FYG theme by default; `--theme ref` = orange). Add every brand/tool name the speaker mentions to the glossary (Claude, n8n, ManyChat, GoHighLevel…); re-run until `transcript.txt` reads right (it keeps an edited plan.json unless `--force`).
+3. Read `comps/<slug>/transcript.txt` and REWRITE `plan.json` semantically, one segment per idea (~1.5–3 s):
+   - first segment `hook` with a punchy `title` (`titleWords: 0` makes the whole spoken sentence type in as subtitle);
+   - mostly `split` with a B-roll that SHOWS what is being said (tool → browser/icon, numbers → stat, steps → list, process → flow, commands → terminal, user assets → image/clip);
+   - a `speaker` beat every 3–4 segments (zoom alternates automatically), with an `overlay` on the 2–3 strongest phrases (`style: serif`, `at` = when the word is spoken);
+   - an occasional full `broll`; transitions mostly `cut`, a `leak`/`whip`/`zoom` every ~10 s;
+   - `highlightWords` for the key terms.
+   Ask the user for screenshots/screen recordings of the tools mentioned when real visuals would beat a template; add them with `scripts/asset.py`.
+4. QA with stills at every segment midpoint (montage + Read), fix overflow/collisions, then `node scripts/render.mjs comps/<slug>` (~6 s of render per second of video). Check: frame count = duration×30, audio −14 LUFS (`ffmpeg -i out.mp4 -af ebur128 -f null -`).
+5. Deliver `out/<slug>.mp4` with SendUserFile and list what to swap (assets, wording). Never commit `comps/*/media/` or the user's footage.
+
 ## When the user sends a reference video
 
 1. Put it in `motion-studio/refs/` (git-ignored). If they only gave a link, try `yt-dlp` (`pip install yt-dlp`); Instagram/TikTok often need login, so ask them to upload the MP4 instead.

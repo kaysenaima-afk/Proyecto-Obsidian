@@ -34,6 +34,7 @@ El **ritmo** (BPM) define la grilla temporal. Sobre esa grilla, el **timing** de
 - [[composicion-y-formato-vertical]] — safe zones, jerarquía, profundidad y cámara virtual
 - [[workflow-recrear-video-referencia]] — de un video de referencia a un MP4 propio, paso a paso
 - [[herramientas-motion-code]] — GSAP/motion-studio vs Remotion vs HyperFrames vs After Effects
+- [[estilos-de-referencia]] — los 3 formatos de Alejandro: noticia cinematográfica, editorial bento, pantalla dividida
 
 ## Errores comunes
 

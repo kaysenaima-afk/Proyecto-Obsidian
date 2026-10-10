@@ -1,0 +1,44 @@
+{
+  "theme": {
+    "accent": "#E8793A", "accent2": "#FFFFFF", "ink": "#111111", "brand": "#E8793A",
+    "light": "#ECECEE", "dark": "#0B0B0D", "sans": "Montserrat", "serif": "Instrument Serif"
+  },
+  "music": "",
+  "musicVolume": 0.12,
+  "sfx": true,
+  "highlightWords": ["Claude", "límite", "automáticamente", "Cursor", "Codex", "Antigravity", "IA", "resto"],
+  "segments": [
+    { "start": 0, "layout": "hook", "title": "Claude Code sin límites", "titleWords": 0 },
+
+    { "start": 3.0, "layout": "split",
+      "broll": { "type": "terminal", "lines": ["$ claude", "⚠ Usage limit reached", "Your limit will reset at 3:00 AM"] } },
+
+    { "start": 4.38, "layout": "split",
+      "broll": { "type": "flow", "root": "Claude Code", "nodes": ["DeepSeek", "Kimi", "GLM"], "tag": "FREE" } },
+
+    { "start": 7.0, "layout": "speaker",
+      "overlay": { "text": "sin parar|tu sesión", "style": "serif", "at": 8.3 } },
+
+    { "start": 9.56, "layout": "split", "transition": "leak",
+      "broll": { "type": "browser", "url": "github.com/decolua/9router", "title": "9Router — AI router gratis", "lines": 4, "button": "★ Star" } },
+
+    { "start": 11.82, "layout": "broll", "transition": "whip",
+      "broll": { "type": "icon", "bg": "light", "items": [
+        { "label": "Claude", "glyph": "✳", "color": "#E8793A" },
+        { "label": "DeepSeek", "glyph": "D", "color": "#4D6BFE" },
+        { "label": "Kimi", "glyph": "K", "color": "#1B1B1F" },
+        { "label": "GLM", "glyph": "Z", "color": "#2F6BFF" }
+      ] } },
+
+    { "start": 15.08, "layout": "split",
+      "broll": { "type": "list", "title": "Compatible con", "items": ["Cursor", "Codex", "Antigravity"] } },
+
+    { "start": 18.2, "layout": "speaker" },
+
+    { "start": 20.76, "layout": "split",
+      "broll": { "type": "terminal", "lines": ["$ npx 9router setup", "✓ Providers connected", "✓ Auto-fallback ON"] } },
+
+    { "start": 22.3, "layout": "speaker", "transition": "zoom",
+      "overlay": { "text": "se encarga|del resto", "style": "serif", "at": 22.4 } }
+  ]
+}
