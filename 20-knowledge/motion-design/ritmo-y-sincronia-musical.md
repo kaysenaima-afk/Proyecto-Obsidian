@@ -70,7 +70,7 @@ Render con música: `node scripts/render.mjs comps/fyg-demo --audio tema.mp3 --a
 
 ## Conceptos conectados
 
-[[easing-y-timing]] [[transiciones]] [[workflow-recrear-video-referencia]]
+[[easing-y-timing]] [[transiciones]] [[workflow-recrear-video-referencia]] [[sonido-profesional-para-motion]]
 
 ## Fuentes
 

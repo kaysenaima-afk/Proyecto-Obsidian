@@ -2,3 +2,6 @@ numpy>=1.26
 Pillow>=10
 sherpa-onnx==1.13.8
 opencv-python-headless>=4.9,<5
+scipy>=1.11
+pedalboard>=0.9
+pyloudnorm>=0.1

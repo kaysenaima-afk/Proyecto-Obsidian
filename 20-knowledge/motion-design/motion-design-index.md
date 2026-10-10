@@ -22,6 +22,7 @@ Motion design y motion graphics para video corto de marketing (Reels, TikTok, Sh
 - [[tipografia-cinetica]] — catálogo de animaciones de texto y reglas de legibilidad
 - [[transiciones]] — cómo pasar de una escena a otra sin que se note el corte
 - [[ritmo-y-sincronia-musical]] — BPM, grilla de beats y diseño sonoro
+- [[sonido-profesional-para-motion]] — SFX propios, mono-safe, niveles, stems y reglas de Instagram
 
 ## Cómo encajan las piezas
 

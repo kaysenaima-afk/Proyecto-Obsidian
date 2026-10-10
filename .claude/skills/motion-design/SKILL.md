@@ -27,6 +27,10 @@ The target look is style C in `20-knowledge/motion-design/estilos-de-referencia.
 
 Follow `comps/meta-carrusel/` as the template: rasterize, measure (colors via pixel sampling, boxes via bbox), rebuild every slide in HTML with matching fonts (@fontsource), extract logos as alpha masks, animate each element so the slide ENDS on the original static design, then render one MP4 per slide with `--query slide=N` (1080×1350, silent) plus a continuous swipe version with SFX. Compare final-state stills side by side with the original pages before rendering. If slides have empty space and the user allows it, fill it with researched, sourced facts (log sources in the comp folder) or clearly labelled illustrative UI.
 
+## Sound design
+
+SFX only unless the user provides music (they usually pick music themselves). Use the owned library `assets/sfx/pro` (regenerate with `scripts/sfxlib.py`), place cues with `sfx()` in the comp at the exact animation frames, keep a hierarchy (primary actions louder, textures barely there, one sound per group), then `scripts/mix.mjs` to produce per-slide WAV stems + muxed videos + cue CSVs without re-rendering. Check: L/R correlation > 0 (mono phones), phone-band loss, per-slide max short-term loudness within ~2 dB (trim per slide), peaks ≤ -1 dBFS. Read `20-knowledge/motion-design/sonido-profesional-para-motion.md`. Instagram may mute video audio when in-app music is added to a carousel: advise mixing outside.
+
 ## When the user sends a reference video
 
 1. Put it in `motion-studio/refs/` (git-ignored). If they only gave a link, try `yt-dlp` (`pip install yt-dlp`); Instagram/TikTok often need login, so ask them to upload the MP4 instead.

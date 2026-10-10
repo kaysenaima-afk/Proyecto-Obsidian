@@ -96,6 +96,13 @@ for n in 1 2 3 4 5 6 7 8 9; do node scripts/render.mjs comps/meta-carrusel --que
 node scripts/render.mjs comps/meta-carrusel --mb 4 --out out/meta-carrusel/carrusel-completo.mp4
 ```
 
+## Diseño sonoro (SFX propios + stems)
+
+- `python3 -I scripts/sfxlib.py` genera `assets/sfx/pro/`: 38 efectos sintetizados (pop, send, receive, key, toggle, lock, check, whoosh, swipe, impact, riser, swish, scramble, scribble, notify, buzz, shimmer, click), afinados en pentatónica de Do, seguros en mono y probados para parlante de celular. Son propios: sin licencias.
+- En la composición: `sfx(nombre, segundo, volumen, { dur, from })` → `post.audio` (`bus: 'sfx'`), con variaciones rotadas.
+- Mezcla sin re-renderizar: `node scripts/mix.mjs comps/x --query slide=3 --wav stems/s3.wav --video v.mp4 --mux v-con-sonido.mp4 --cues stems/s3-cues.csv`. El stem sale sin normalizar (para balancear con música), con limitador transparente a -1 dBFS; imprime pico, LUFS integrado y máximo de corto plazo.
+- Guía de mezcla con música: `comps/meta-carrusel/GUIA-DE-MEZCLA.md`. Teoría: `20-knowledge/motion-design/sonido-profesional-para-motion.md`.
+
 ## Crear una composición
 
 1. Copiá `comps/_template/` a `comps/<nombre>/`.
@@ -144,7 +151,8 @@ scripts/prep.py    talking head → transcripción, cortes, cara, frames, borrad
 scripts/asset.py   agrega imágenes / clips de B-roll a un proyecto
 scripts/test-frames.sh  test de regresión: cada frame del MP4 = su tiempo exacto
 lib/talk.js/.css   motor del editor de pantalla dividida
-assets/sfx/        kit de SFX sintetizados (whoosh, pop, tick, impact)
+assets/sfx/        kit básico (make-sfx.sh) + assets/sfx/pro (sfxlib.py, kit profesional)
+scripts/mix.mjs    stems de audio por composición + mux sobre videos ya renderizados (+ mixdown.py)
 comps/             composiciones (una carpeta por video)
 refs/ analysis/ out/   ignorados por git
 ```
