@@ -82,6 +82,20 @@ Opciones de `prep.py`: `--gap 0.4` (silencios más largos se cortan), `--pad 0.0
 
 El motor (`lib/talk.js`) sincroniza los frames del speaker por seek. Los subtítulos salen de `words.json`, el audio se mezcla en el render (voz + música en loop + SFX de `assets/sfx/`) y se normaliza a −14 LUFS / −1 dBTP.
 
+## Carrusel animado (PDF / slides → videos por slide)
+
+Ejemplo: `comps/meta-carrusel/` (carrusel FYG × Meta, 9 slides 1080×1350).
+
+1. Rasterizar el PDF (`pdftoppm -png -scale-to-x 1080 -scale-to-y 1350 carrusel.pdf page`) y medir posiciones/colores.
+2. Reconstruir cada slide en HTML (una `<section class="slide">` por slide) con las mismas fuentes; logos/marcas se extraen del PDF como máscaras alpha.
+3. Coreografía en `anim.js`: cada slide entra por partes y termina en su diseño estático (sirve de loop).
+4. Render: `--query slide=N` → un MP4 por tarjeta del carrusel (sin audio, la música se agrega en la app); sin query → versión continua con swipe + SFX.
+
+```bash
+for n in 1 2 3 4 5 6 7 8 9; do node scripts/render.mjs comps/meta-carrusel --query slide=$n --mb 4 --out out/meta-carrusel/slide-0$n.mp4; done
+node scripts/render.mjs comps/meta-carrusel --mb 4 --out out/meta-carrusel/carrusel-completo.mp4
+```
+
 ## Crear una composición
 
 1. Copiá `comps/_template/` a `comps/<nombre>/`.

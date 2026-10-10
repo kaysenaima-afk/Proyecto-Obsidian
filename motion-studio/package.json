@@ -16,8 +16,11 @@
   },
   "dependencies": {
     "@fontsource/bebas-neue": "5.3.0",
+    "@fontsource/caveat-brush": "5.3.0",
     "@fontsource/instrument-serif": "5.3.0",
     "@fontsource/inter": "5.3.0",
+    "@fontsource/inter-tight": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
     "@fontsource/montserrat": "5.3.0",
     "@fontsource/syne": "5.3.0",
     "gsap": "3.15.0",

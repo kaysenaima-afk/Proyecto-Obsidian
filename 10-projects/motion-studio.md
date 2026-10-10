@@ -22,6 +22,7 @@ Producir motion graphics de calidad estudio para FYG y sus clientes (reels, prom
 - **Librería de presets:** 24 animaciones (texto, formas, transiciones, cámara) + 6 curvas con nombre.
 - **Demo FYG:** reel de 12 s a 120 BPM. Copia liviana en `motion-studio/examples/fyg-demo.mp4`; la versión full (20 Mbps) se regenera en `out/` con `--mb 6` en ~6 min.
 - **Editor de pantalla dividida:** listo. Talking head → transcripción con tiempos por palabra (Parakeet), cortes de silencio, encuadre por cara, plan de edición con 9 plantillas de B-roll, subtítulos, énfasis, transiciones, SFX y mezcla a −14 LUFS. Probado de punta a punta.
+- **Carrusel animado FYG × Meta:** 9 slides del PDF reconstruidas en HTML y animadas. Un MP4 por slide (1080×1350) + versión continua con swipe. Espacios vacíos completados con datos verificados del anuncio de Meta (fuentes en `comps/meta-carrusel/FUENTES.md`).
 - **Próximo:** primer video real de Alejandro; plantillas de los estilos de voz en off A y B ([[estilos-de-referencia]]).
 
 ---

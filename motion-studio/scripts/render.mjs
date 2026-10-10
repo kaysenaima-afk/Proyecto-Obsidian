@@ -10,6 +10,7 @@
  *   node scripts/render.mjs comps/lower-third --alpha            # transparent .mov overlay
  *   node scripts/render.mjs comps/fyg-demo --grain 12            # film grain in post (0 = off)
  *   node scripts/render.mjs comps/fyg-demo --mb 6 --boost 16     # 16 samples inside post.blurBoost ranges
+ *   node scripts/render.mjs comps/meta-carrusel --query slide=3   # extra URL params → out/meta-carrusel-slide-3.mp4
  *
  * A composition can set defaults with
  *   MotionComp.create({ post: { grain: 10, blurBoost: [[2.1, 2.5]], boostSamples: 16 } }).
@@ -43,7 +44,9 @@ if (!opts._[0] || opts.help) {
 }
 
 const comp = compUrlPath(opts._[0]);
-const compName = path.basename(path.dirname(comp.abs));
+// --query "slide=3" passes extra URL params to the composition (one comp, several outputs).
+const query = opts.query ? String(opts.query) : '';
+const compName = path.basename(path.dirname(comp.abs)) + (query ? '-' + query.replace(/[^\w]+/g, '-') : '');
 const scale = parseFloat(opts.scale ?? 1);
 const sub = Math.max(1, parseInt(opts.mb ?? 1, 10));
 const shutter = parseFloat(opts.shutter ?? 0.5);
@@ -64,7 +67,7 @@ function run(cmd, args, { input } = {}) {
 
 // ------------------------------------------------------------------ browser
 const { server, port } = await startServer();
-const url = `http://127.0.0.1:${port}${comp.urlPath}?render=1`;
+const url = `http://127.0.0.1:${port}${comp.urlPath}?render=1${query ? '&' + query : ''}`;
 const browser = await chromium.launch({
   headless: true,
   executablePath: process.env.CHROMIUM_PATH || undefined,

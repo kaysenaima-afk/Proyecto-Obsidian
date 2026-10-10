@@ -23,6 +23,10 @@ The target look is style C in `20-knowledge/motion-design/estilos-de-referencia.
 4. QA with stills at every segment midpoint (montage + Read), fix overflow/collisions, then `node scripts/render.mjs comps/<slug>` (~6 s of render per second of video). Check: frame count = duration×30, audio −14 LUFS (`ffmpeg -i out.mp4 -af ebur128 -f null -`).
 5. Deliver `out/<slug>.mp4` with SendUserFile and list what to swap (assets, wording). Never commit `comps/*/media/` or the user's footage.
 
+## When the user sends a carousel (PDF/PNGs) to animate
+
+Follow `comps/meta-carrusel/` as the template: rasterize, measure (colors via pixel sampling, boxes via bbox), rebuild every slide in HTML with matching fonts (@fontsource), extract logos as alpha masks, animate each element so the slide ENDS on the original static design, then render one MP4 per slide with `--query slide=N` (1080×1350, silent) plus a continuous swipe version with SFX. Compare final-state stills side by side with the original pages before rendering. If slides have empty space and the user allows it, fill it with researched, sourced facts (log sources in the comp folder) or clearly labelled illustrative UI.
+
 ## When the user sends a reference video
 
 1. Put it in `motion-studio/refs/` (git-ignored). If they only gave a link, try `yt-dlp` (`pip install yt-dlp`); Instagram/TikTok often need login, so ask them to upload the MP4 instead.
