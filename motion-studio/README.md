@@ -96,12 +96,14 @@ for n in 1 2 3 4 5 6 7 8 9; do node scripts/render.mjs comps/meta-carrusel --que
 node scripts/render.mjs comps/meta-carrusel --mb 4 --out out/meta-carrusel/carrusel-completo.mp4
 ```
 
-## Diseño sonoro (SFX propios + stems)
+## Diseño sonoro (foley editado + stems)
 
-- `python3 -I scripts/sfxlib.py` genera `assets/sfx/pro/`: 38 efectos sintetizados (pop, send, receive, key, toggle, lock, check, whoosh, swipe, impact, riser, swish, scramble, scribble, notify, buzz, shimmer, click), afinados en pentatónica de Do, seguros en mono y probados para parlante de celular. Son propios: sin licencias.
-- En la composición: `sfx(nombre, segundo, volumen, { dur, from })` → `post.audio` (`bus: 'sfx'`), con variaciones rotadas.
-- Mezcla sin re-renderizar: `node scripts/mix.mjs comps/x --query slide=3 --wav stems/s3.wav --video v.mp4 --mux v-con-sonido.mp4 --cues stems/s3-cues.csv`. El stem sale sin normalizar (para balancear con música), con limitador transparente a -1 dBFS; imprime pico, LUFS integrado y máximo de corto plazo.
-- Guía de mezcla con música: `comps/meta-carrusel/GUIA-DE-MEZCLA.md`. Teoría: `20-knowledge/motion-design/sonido-profesional-para-motion.md`.
+- **Librería v2 (`assets/sfx/el/`):** 17 familias de foley real (whoosh, swish, impacto en capas, riser, enviado/recibido, pop, 9 teclas, switch, candado, check, notificación, marcador, error, brillo, datos, tap). Tomas generadas con ElevenLabs (prompts e ids en `raw/prompts.json`) y editadas con `python3 -I scripts/sfxprep.py --report`: recorte al transitorio, limpieza de graves, saturación paralela para que el grave se escuche en celular, estéreo seguro en mono, variaciones por varispeed, -1 dBFS. Genera `manifest.js` con el **golpe** (dónde aterriza cada archivo) y el **loudness** momentáneo de cada uno.
+- En la composición (ver `comps/meta-carrusel/anim.js`): `sfx(nombre, golpe_s, lufs, { el, dur, from })`. El sonido se alinea por su golpe, no por el inicio del archivo; el nivel se pide en LUFS (hero -15…-18, acciones -20…-26, movimiento -24…-30, textura -28…-37); `el` panea según la posición del elemento. `'check-2'` = archivo exacto.
+- `post.space: -20` manda todo el bus a una sala corta compartida (glue).
+- Mezcla sin re-renderizar: `node scripts/mix.mjs comps/x --query slide=3 --wav stems/s3.wav --video v.mp4 --mux v-con-sonido.mp4 --cues stems/s3-cues.csv [--space -20|off]`. El stem sale sin normalizar (para balancear con música), con limitador transparente a -1 dBFS; imprime pico, LUFS integrado y máximo de corto plazo. La hoja de cues trae arranque y golpe de cada sonido.
+- v1 sintetizada (100 % propia, sin licencias): `python3 -I scripts/sfxlib.py` → `assets/sfx/pro/`.
+- Guía de mezcla con música: `comps/meta-carrusel/GUIA-DE-MEZCLA.md`. Teoría y análisis v1 vs v2: `20-knowledge/motion-design/sonido-profesional-para-motion.md`.
 
 ## Crear una composición
 
@@ -151,7 +153,8 @@ scripts/prep.py    talking head → transcripción, cortes, cara, frames, borrad
 scripts/asset.py   agrega imágenes / clips de B-roll a un proyecto
 scripts/test-frames.sh  test de regresión: cada frame del MP4 = su tiempo exacto
 lib/talk.js/.css   motor del editor de pantalla dividida
-assets/sfx/        kit básico (make-sfx.sh) + assets/sfx/pro (sfxlib.py, kit profesional)
+assets/sfx/        kit básico (make-sfx.sh) · pro/ (sfxlib.py, síntesis) · el/ (sfxprep.py, foley editado v2)
+scripts/sfxprep.py edita las tomas de foley → assets/sfx/el + manifest (golpe y loudness por archivo)
 scripts/mix.mjs    stems de audio por composición + mux sobre videos ya renderizados (+ mixdown.py)
 comps/             composiciones (una carpeta por video)
 refs/ analysis/ out/   ignorados por git

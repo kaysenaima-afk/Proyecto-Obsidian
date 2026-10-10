@@ -1,0 +1,119 @@
+{
+ "_about": "ElevenLabs text-to-sound (eleven_text_to_sound_v2, prompt influence 0.3), flow mYkPiV4IeYKlQ7Dutx3M. Letters = take order in each folder.",
+ "swipe": {
+  "prompt": "Fast smooth air whoosh, clean premium transition swish, close-mic, short",
+  "takes": {
+   "a": "cZvjphnxGcyCCpQtTZEz",
+   "b": "9FgANDmuKaxhEFXjnSa4"
+  }
+ },
+ "impact": {
+  "prompt": "Deep cinematic boom impact, punchy low hit with short dark tail",
+  "takes": {
+   "a": "zQPXnoO6GvZplEZIQkGg",
+   "b": "wbE61LQbdZdhfZoX8YX0"
+  }
+ },
+ "riser": {
+  "prompt": "Short cinematic tension riser, airy reverse swell building up and cutting off sharply",
+  "takes": {
+   "a": "Du3PqMWBeWPtrN45eVoF",
+   "b": "N2mIrBs2fPMiviJrYnh4"
+  }
+ },
+ "send": {
+  "prompt": "Smartphone message sent sound, short soft swoosh, clean modern UI",
+  "takes": {
+   "a": "Gfg3qEUpLeKYrxxo3pjf",
+   "b": "Flf5DCPqqUi1vt3FGuRW"
+  }
+ },
+ "receive": {
+  "prompt": "Soft message received notification, gentle glassy blip, modern phone UI",
+  "takes": {
+   "a": "jnUsgPdqfweEa1IxaGFm"
+  }
+ },
+ "pop": {
+  "prompt": "Small soft bubble pop, clean UI pop sound, close-mic",
+  "takes": {
+   "a": "VBJNP3OsQKcQNU3030b6"
+  }
+ },
+ "key": {
+  "prompt": "Single mechanical keyboard key press, crisp close-mic click",
+  "takes": {
+   "a": "XR1g3kJAnE3QxYhUOILB"
+  }
+ },
+ "toggle": {
+  "prompt": "Plastic toggle switch flicked on, crisp short click",
+  "takes": {
+   "a": "kX8gOIl8LxDaw6s19IrG"
+  }
+ },
+ "lock": {
+  "prompt": "Small metal padlock snapping shut, crisp mechanical click",
+  "takes": {
+   "a": "SfmeIb95UkIyECVRxCPJ"
+  }
+ },
+ "check": {
+  "prompt": "Soft success chime, bright positive UI confirmation ding, short",
+  "takes": {
+   "a": "rzOq49Grk5SMouOTOvwp"
+  }
+ },
+ "notify": {
+  "prompt": "Warm marimba notification chime, two quick rising notes, pleasant phone alert",
+  "takes": {
+   "a": "pnFGrDJBQuDVFRAKzwMe"
+  }
+ },
+ "scribble": {
+  "prompt": "Marker pen quickly writing a short word on paper, close-mic scribble",
+  "takes": {
+   "a": "Cw6TGAamhGP5mn536NE3",
+   "b": "DnkokkiQi15PYpUpDdny"
+  },
+  "prompt_b": "Felt marker writing a handwritten sentence on paper for two seconds, steady close-mic strokes"
+ },
+ "swish": {
+  "prompt": "Quick light swish of a paper card sliding past, soft airy whoosh, very short",
+  "takes": {
+   "a": "2yi4GKlUvQ7jwyT9ymXX",
+   "b": "H6mwwavO1x8mMvmDZqYf"
+  }
+ },
+ "buzz": {
+  "prompt": "Soft dull error buzz, short low negative UI sound",
+  "takes": {
+   "a": "DO9MjLds2KIqOi7bq4bQ"
+  }
+ },
+ "shimmer": {
+  "prompt": "Soft magical sparkle shimmer, light glittering twinkle, elegant reveal",
+  "takes": {
+   "a": "M2xsZ3JFpQGbASikV7kP"
+  }
+ },
+ "scramble": {
+  "prompt": "Subtle digital data processing chatter, soft fast computer bleeps and glitches",
+  "takes": {
+   "a": "Jd5sTeE08ZizsEYR8PdI"
+  }
+ },
+ "click": {
+  "prompt": "Finger tapping a smartphone glass screen, single soft tap",
+  "takes": {
+   "a": "H4GeXENV4w8ueqFPqIrm"
+  }
+ },
+ "hit": {
+  "prompt": "Punchy cinematic hit with a sharp snappy crack, tight trailer impact, no long tail",
+  "takes": {
+   "a": "UGAs4dVzPytPlwltsVP2",
+   "b": "CJPDKEwUZFHCIHlJVYeT"
+  }
+ }
+}

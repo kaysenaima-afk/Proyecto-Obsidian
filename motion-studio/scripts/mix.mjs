@@ -5,6 +5,7 @@
  *
  *   node scripts/mix.mjs comps/meta-carrusel --query slide=3 --wav out/x/slide-03-sfx.wav \
  *        [--video out/x/slide-03.mp4 --mux out/x/slide-03-sfx.mp4] [--bus sfx] [--cues out/x/slide-03-cues.csv]
+ *        [--space -20 | off]   shared room send in dB (default: the comp's post.space)
  */
 import { chromium } from 'playwright-core';
 import { spawnSync } from 'node:child_process';
@@ -31,7 +32,8 @@ page.on('pageerror', (e) => console.error('[page error]', e.message));
 await page.goto(`http://127.0.0.1:${port}${comp.urlPath}?render=1${opts.query ? '&' + opts.query : ''}`);
 await page.waitForFunction(() => window.__motion && window.__motion.ready, null, { timeout: 30000 });
 await page.evaluate(() => window.__motion.ready);
-const ev = await page.evaluate(() => ({ duration: window.__motion.duration, audio: window.__motion.post.audio || [] }));
+const ev = await page.evaluate(() => ({ duration: window.__motion.duration, audio: window.__motion.post.audio || [], space: window.__motion.post.space }));
+const space = opts.space !== undefined ? opts.space : ev.space;   // shared room send (dB): post.space in the comp
 await browser.close();
 server.close();
 
@@ -42,16 +44,16 @@ const tracks = ev.audio.map((t) => ({
   if (!fs.existsSync(t.file)) { console.warn('[mix] missing', t.src); return false; }
   return true;
 });
-if (opts.cues) {   // cue sheet for editors: time, sound, gain
+if (opts.cues) {   // cue sheet for editors: file start, landing frame (peak), sound, gain
   const rows = tracks.slice().sort((a, b) => a.at - b.at).map((t) =>
-    [t.at.toFixed(3), path.basename(t.src, '.wav'), (20 * Math.log10(t.volume || 1)).toFixed(1), t.dur ? t.dur.toFixed(2) : ''].join(','));
+    [t.at.toFixed(3), (t.land ?? t.at).toFixed(3), path.basename(t.src, '.wav'), (20 * Math.log10(t.volume || 1)).toFixed(1), t.dur ? t.dur.toFixed(2) : ''].join(','));
   fs.mkdirSync(path.dirname(path.resolve(opts.cues)), { recursive: true });
-  fs.writeFileSync(path.resolve(opts.cues), 'tiempo_s,sonido,ganancia_db,duracion_s\n' + rows.join('\n') + '\n');
+  fs.writeFileSync(path.resolve(opts.cues), 'arranca_s,golpe_s,sonido,ganancia_db,duracion_s\n' + rows.join('\n') + '\n');
 }
 const tmp = path.join(os.tmpdir(), `mix-${process.pid}.json`);
 fs.writeFileSync(tmp, JSON.stringify({ duration: ev.duration, tracks }));
 fs.mkdirSync(path.dirname(path.resolve(opts.wav)), { recursive: true });
-const py = spawnSync('python3', ['-I', path.join(ROOT, 'scripts', 'mixdown.py'), tmp, path.resolve(opts.wav), ...(opts.bus ? ['--bus', opts.bus] : [])], { encoding: 'utf8' });
+const py = spawnSync('python3', ['-I', path.join(ROOT, 'scripts', 'mixdown.py'), tmp, path.resolve(opts.wav), ...(opts.bus ? ['--bus', opts.bus] : []), ...(space !== undefined && space !== 'off' ? ['--space', String(space)] : [])], { encoding: 'utf8' });
 fs.rmSync(tmp, { force: true });
 if (py.status !== 0) { console.error(py.stderr); process.exit(1); }
 console.log(`♪ ${path.relative(process.cwd(), path.resolve(opts.wav))}  ${py.stdout.trim()}`);

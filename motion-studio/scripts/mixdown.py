@@ -2,11 +2,13 @@
 """
 Sample-accurate audio mixdown for a composition's sound cues (used by scripts/mix.mjs).
 
-    python3 -I scripts/mixdown.py events.json out.wav [--bus sfx] [--ceiling -1.0]
+    python3 -I scripts/mixdown.py events.json out.wav [--bus sfx] [--ceiling -1.0] [--space -20]
 
 events.json: { "duration": s, "tracks": [ { "file": abs path, "at": s, "volume": lin, "from": s, "dur": s,
                                             "pan": -1..1, "bus": "sfx" } ] }
 Places every cue at its exact sample, applies gain / trim (+40 ms fade) / pan and sums. The master is a
+`--space` (dB) sends the whole bus to one short, dark room (high-passed, narrowed) so every cue sits in the
+same space and decays naturally instead of stopping dead: the "glue" a mixer adds. The master is a
 transparent look-ahead limiter at the ceiling (unity gain otherwise, no make-up). No loudness normalisation:
 this is a STEM, meant to be balanced against the music by the editor. Prints peak, integrated and max
 short-term (3 s) loudness.
@@ -57,6 +59,7 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--bus", default=None, help="only tracks of this bus")
     ap.add_argument("--ceiling", type=float, default=-1.0, help="limiter ceiling (dBFS)")
+    ap.add_argument("--space", type=float, default=None, help="shared room send level (dB), e.g. -20")
     a = ap.parse_args()
 
     ev = json.load(open(a.events))
@@ -85,6 +88,12 @@ def main():
         j = min(n, i + x.shape[1])
         mix[:, i:j] += x[:, : j - i]
         used += 1
+
+    if a.space is not None:
+        from pedalboard import Pedalboard, Reverb, HighpassFilter, LowpassFilter
+        room = Pedalboard([Reverb(room_size=0.28, damping=0.6, wet_level=1.0, dry_level=0.0, width=0.6),
+                           HighpassFilter(320), LowpassFilter(7500)])
+        mix = mix + room(mix.astype(np.float32), SR).astype(np.float64)[:, :n] * 10 ** (a.space / 20)
 
     raw_peak = 20 * np.log10(np.abs(mix).max() + 1e-12)
     out = limit(mix, 10 ** (a.ceiling / 20)).astype(np.float32)
