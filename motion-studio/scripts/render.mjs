@@ -286,7 +286,8 @@ try {
       ? `${tracks.map((_, i) => `[a${i}]`).join('')}amix=inputs=${tracks.length}:normalize=0:duration=longest,` +
         'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.89:level=false,'   // loudnorm runs at 192 kHz; limiter guarantees ≤ -1 dBTP
       : '[a0]';
-    const graph = `${chains.join(';')};${mix}atrim=end=${dur},afade=t=out:st=${fadeOut}:d=0.5[aout]`;
+    // apad: sparse SFX can end before the picture — pad with silence so audio = video length exactly.
+    const graph = `${chains.join(';')};${mix}apad=whole_dur=${dur},atrim=end=${dur},afade=t=out:st=${fadeOut}:d=0.5[aout]`;
     const fcIdx = args.indexOf('-filter_complex');
     if (fcIdx >= 0) args[fcIdx + 1] += ';' + graph;
     else args.push('-filter_complex', graph);
