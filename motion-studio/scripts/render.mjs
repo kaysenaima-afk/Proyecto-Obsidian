@@ -239,7 +239,7 @@ try {
   for (const tr of meta.post.audio || []) {
     const file = tr.src.startsWith('/') ? path.join(ROOT, tr.src) : path.join(path.dirname(comp.abs), tr.src);
     if (!fs.existsSync(file)) { console.warn(`[audio] missing ${tr.src}`); continue; }
-    tracks.push({ file, at: tr.at ?? 0, volume: tr.volume ?? 1, loop: tr.loop, from: tr.from ?? 0 });
+    tracks.push({ file, at: tr.at ?? 0, volume: tr.volume ?? 1, loop: tr.loop, from: tr.from ?? 0, dur: tr.dur });
   }
   for (const tr of tracks) {
     if (tr.loop) args.push('-stream_loop', '-1');
@@ -279,7 +279,8 @@ try {
     const chains = tracks.map((tr, i) => {
       const shift = tr.at - from;
       const pre = shift < 0 ? `atrim=start=${(-shift).toFixed(3)},asetpts=PTS-STARTPTS,` : `adelay=${Math.round(shift * 1000)}:all=1,`;
-      return `[${i + 1}:a]aformat=sample_rates=48000:channel_layouts=stereo,${pre}volume=${tr.volume}[a${i}]`;
+      const cut = tr.dur ? `atrim=end=${tr.dur.toFixed(3)},afade=t=out:st=${Math.max(0, tr.dur - 0.04).toFixed(3)}:d=0.04,` : '';
+      return `[${i + 1}:a]aformat=sample_rates=48000:channel_layouts=stereo,${cut}${pre}volume=${tr.volume}[a${i}]`;
     });
     const mix = tracks.length > 1
       ? `${tracks.map((_, i) => `[a${i}]`).join('')}amix=inputs=${tracks.length}:normalize=0:duration=longest,` +
