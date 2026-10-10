@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Template</title>
+<!-- Fonts are local (@fontsource) so renders never depend on the network. -->
+<link rel="stylesheet" href="/node_modules/@fontsource/inter/400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/inter/700.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/syne/800.css">
+<style>
+  :root { --bg:#1A0A12; --wine:#631336; --pink:#F7D1DE; --acid:#C8F135; }
+  html, body { margin:0; background:var(--bg); }
+  #stage { font-family: Inter, sans-serif; color: var(--pink); }
+  .scene { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:0 90px; }
+  h1 { font: 800 124px/0.92 Syne, sans-serif; letter-spacing:-0.03em; margin:0; text-transform:uppercase; }
+  p  { font: 400 46px/1.3 Inter, sans-serif; margin:40px 0 0; opacity:.85; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <section class="scene" id="s1">
+    <h1 class="title">Hola<br>motion</h1>
+    <p class="sub">Editá este archivo y renderizá.</p>
+  </section>
+</div>
+
+<script src="/node_modules/gsap/dist/gsap.min.js"></script>
+<script src="/node_modules/gsap/dist/CustomEase.min.js"></script>
+<script src="/node_modules/gsap/dist/SplitText.min.js"></script>
+<script src="/node_modules/gsap/dist/DrawSVGPlugin.min.js"></script>
+<script src="/node_modules/gsap/dist/ScrambleTextPlugin.min.js"></script>
+<script src="/lib/presets.js"></script>
+<script src="/lib/runtime.js"></script>
+<script>
+MotionComp.create({ width: 1080, height: 1920, fps: 30, duration: 4, background: '#1A0A12' }, (tl, { P }) => {
+  tl.add(P.lineReveal('.title'), 0.2)
+    .add(P.blurIn('.sub', { by: 'words' }), 0.7)
+    .to('#s1', { autoAlpha: 0, y: -80, duration: 0.5, ease: 'exit' }, 3.4);
+});
+</script>
+</body>
+</html>

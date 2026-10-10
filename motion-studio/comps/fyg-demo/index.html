@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FYG Demo Reel</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/inter/400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/inter/500.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/inter/700.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/bebas-neue/400.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/syne/700.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/syne/800.css">
+<style>
+  /*
+   * FYG demo reel — 1080x1920, 12 s, built on a 120 BPM grid (1 beat = 0.5 s)
+   * so every hit lands on a beat and any 120 BPM track syncs without retiming.
+   * Safe area for Reels UI: x 60–940, y 250–1480.
+   */
+  :root { --bg:#1A0A12; --wine:#631336; --pink:#F7D1DE; --acid:#C8F135; }
+  html, body { margin:0; background:var(--bg); }
+  #stage { font-family: Inter, sans-serif; color: var(--pink); }
+  #camera { position:absolute; inset:0; }
+  .scene { position:absolute; inset:0; visibility:hidden; overflow:hidden; }
+  .scene .content { position:absolute; left:90px; right:140px; top:250px; bottom:440px; display:flex; flex-direction:column; justify-content:center; }
+  .dark { background: radial-gradient(120% 80% at 30% 35%, #2a0f1d 0%, var(--bg) 60%); }
+  .wine { background: radial-gradient(110% 70% at 50% 40%, #7a1a44 0%, var(--wine) 55%, #4a0e28 100%); }
+  .pink { background: var(--pink); color: var(--bg); }
+
+  .kicker { font: 500 30px/1 Inter; letter-spacing: .32em; color: var(--acid); margin-bottom: 44px; }
+  .hook { font: 400 200px/0.86 'Bebas Neue'; letter-spacing: 0.005em; margin:0; text-transform: uppercase; }
+  .hook span { display:inline-block; }
+  .hook.acid { color: var(--acid); }
+  .ghost { position:absolute; font: 400 1100px/0.8 'Bebas Neue'; color: transparent; -webkit-text-stroke: 3px rgba(99,19,54,.9); right:-60px; bottom:60px; }
+
+  .label { font: 700 40px/1 Inter; letter-spacing: .4em; text-transform: uppercase; margin-bottom: 30px; }
+  .mega { font: 400 260px/0.9 'Bebas Neue'; letter-spacing: 0.01em; margin: 0; color: var(--pink); }
+  .chips { display:flex; flex-wrap:wrap; gap:18px; margin-top: 70px; }
+  .chip { font: 500 38px/1 Inter; padding: 22px 30px; border-radius: 99px; border: 2px solid rgba(247,209,222,.45); color: var(--pink); background: rgba(26,10,18,.25); }
+  .chip b { color: var(--acid); font-weight:700; margin-right: 10px; }
+
+  .counter { display:flex; align-items:baseline; gap: 16px; }
+  .counter #count { font: 400 230px/0.9 'Bebas Neue'; letter-spacing: 0.005em; font-variant-numeric: tabular-nums; }
+  .counter small { font: 700 48px/1 Inter; letter-spacing: 0; opacity:.7; }
+  .chart { width: 100%; margin-top: 60px; overflow: visible; }
+  .chart path { fill:none; stroke: var(--wine); stroke-width: 14; stroke-linecap: round; }
+  .chart .grid line { stroke: rgba(26,10,18,.12); stroke-width: 2; }
+  .chart circle { fill: var(--acid); stroke: var(--bg); stroke-width: 6; }
+  .caption { font: 500 50px/1.25 Inter; margin-top: 50px; }
+  .caption b { font-weight:700; color: var(--wine); }
+
+  .logo { font: 800 280px/0.85 Syne; letter-spacing: -0.06em; color: var(--pink); white-space: nowrap; }
+  .tag { font: 700 56px/1.1 Syne; letter-spacing: -0.01em; color: var(--acid); margin-top: 26px; }
+  .cta { align-self:flex-start; margin-top: 90px; font: 500 42px/1 Inter; color: var(--bg); background: var(--acid); padding: 30px 40px; border-radius: 99px; }
+  .cta b { font-weight: 700; }
+  .cta .arrow { display:inline-block; margin-left: 12px; }
+  .ring { position:absolute; width: 1400px; height: 1400px; left: 50%; top: 50%; margin: -700px 0 0 -700px; border-radius:50%; border: 3px dashed rgba(247,209,222,.12); }
+
+  #panel { position:absolute; inset:0; background: var(--acid); visibility:hidden; z-index: 20; }
+  #flash { position:absolute; inset:0; visibility:hidden; z-index: 21; pointer-events:none; }
+
+  /* Film grain is applied in post by the renderer (post.grain) — cheaper and survives motion blur. */
+  .vignette { position:absolute; inset:0; z-index: 29; pointer-events:none; background: radial-gradient(130% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.45) 100%); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="camera">
+    <!-- 1 · HOOK -->
+    <section class="scene dark" id="s1">
+      <div class="ghost" id="ghost">01</div>
+      <div class="content" id="s1c">
+        <div class="kicker" id="kicker">FYG AGENCY · 2026</div>
+        <h1 class="hook"><span id="h1a">Tu negocio</span></h1>
+        <h1 class="hook"><span id="h1b">no necesita</span></h1>
+        <h1 class="hook acid"><span id="h1c"><span id="strikeword">más horas.</span></span></h1>
+      </div>
+    </section>
+
+    <!-- 2 · TURN -->
+    <section class="scene wine" id="s2">
+      <div class="content">
+        <div class="label" id="label2">Necesita</div>
+        <h1 class="mega"><span id="mega">SISTEMAS</span></h1>
+        <div class="chips">
+          <span class="chip"><b>01</b>Captación</span>
+          <span class="chip"><b>02</b>Seguimiento</span>
+          <span class="chip"><b>03</b>Cierre</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · PROOF -->
+    <section class="scene pink" id="s3">
+      <div class="content">
+        <div class="label" id="label3">Objetivo</div>
+        <div class="counter"><span id="count">€0</span><small>/mes</small></div>
+        <svg class="chart" viewBox="0 0 860 400">
+          <g class="grid"><line x1="0" y1="100" x2="860" y2="100"/><line x1="0" y1="200" x2="860" y2="200"/><line x1="0" y1="300" x2="860" y2="300"/></g>
+          <path id="chartPath" d="M10,380 C140,372 220,350 320,320 S500,240 580,180 S760,70 840,30"/>
+          <circle id="dot" cx="840" cy="30" r="20"/>
+        </svg>
+        <div class="caption" id="caption">en 12 meses. <b>Sin sumar horas.</b></div>
+      </div>
+    </section>
+
+    <!-- 4 · END CARD -->
+    <section class="scene dark" id="s4">
+      <div class="ring" id="ring"></div>
+      <div class="content">
+        <div class="logo" id="logo">FYG</div>
+        <div class="tag" id="tag">Follow Your Gut</div>
+        <div class="cta" id="cta">Escribí <b>SISTEMA</b> por DM <span class="arrow" id="arrow">→</span></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="panel"></div>
+  <div id="flash"></div>
+  <div class="vignette"></div>
+</div>
+
+<script src="/node_modules/gsap/dist/gsap.min.js"></script>
+<script src="/node_modules/gsap/dist/CustomEase.min.js"></script>
+<script src="/node_modules/gsap/dist/SplitText.min.js"></script>
+<script src="/node_modules/gsap/dist/DrawSVGPlugin.min.js"></script>
+<script src="/node_modules/gsap/dist/ScrambleTextPlugin.min.js"></script>
+<script src="/lib/presets.js"></script>
+<script src="/lib/runtime.js"></script>
+<script>
+const BEAT = 0.5; // 120 BPM
+const b = (n) => n * BEAT;
+
+// Whip-speed transitions get 16 motion-blur samples instead of the base count (no strobing copies).
+const post = { grain: 10, blurBoost: [[2.06, 2.98], [4.98, 5.62], [8.38, 9.12]], boostSamples: 16 };
+
+MotionComp.create({ width: 1080, height: 1920, fps: 30, duration: 12, background: '#1A0A12', post }, (tl, { P }) => {
+  // Layout pass first (fonts are loaded): every headline fills the safe width on one line.
+  P.fitText(['#h1a', '#h1b', '#h1c'], { max: 320 });
+  P.fitText('#mega', { max: 320, width: 790 });   // leave room for the highlight's side padding inside the safe area
+  P.fitText('#logo', { max: 300 });
+
+  // ---- 1 · HOOK (beats 0–5)
+  tl.set('#s1', { autoAlpha: 1 }, 0)
+    .add(P.drift('#s1c', { scale: 1.05, y: -20, duration: b(5.4) }), 0)
+    .fromTo('#ghost', { y: 160 }, { y: -120, duration: b(5.4), ease: 'none' }, 0)   // parallax: background moves slower/opposite
+    .add(P.scramble('#kicker', { duration: 0.9 }), 0.05)
+    .add(P.lineReveal('#h1a'), b(0) + 0.1)
+    .add(P.lineReveal('#h1b'), b(1))
+    .add(P.lineReveal('#h1c', { rotate: 4 }), b(2))
+    .add(P.strike('#strikeword', { color: '#F7D1DE', thickness: '0.1em' }), b(3) - 0.12)
+    .add(P.shake('#camera', { intensity: 14, duration: 0.3 }), b(3) + 0.25)
+    .to('#h1c', { opacity: 0.55, duration: 0.4, ease: 'none' }, b(3) + 0.3)
+
+  // ---- transition: acid panel sweep (beat 5)
+    .add(P.panelSweep('#panel', '#s1', '#s2', { duration: 0.42 }), b(5) - 0.42)
+
+  // ---- 2 · TURN (beats 5–11)
+    .add(P.drift('#s2 .content', { scale: 1.04, duration: b(6.4) }), b(5))
+    .add(P.scramble('#label2', { duration: 0.7, chars: 'NECSITA' }), b(5) + 0.15)
+    .add(P.charCascade('#mega', { stagger: 0.035 }), b(6))
+    .add(P.highlight('#mega', { color: '#C8F135', textColor: '#1A0A12', top: '8%', bottom: '2%' }), b(7) - 0.1)
+    .add(P.punch('#camera', { scale: 1.06 }), b(8))
+    .add(P.staggerIn('#s2 .chip', { y: 50, each: 0.12 }), b(8) + 0.05)
+
+  // ---- transition: iris into pink (beat 11)
+    .add(P.irisTransition('#s2', '#s3', { y: '55%', duration: 0.6 }), b(11) - 0.5)
+    .to('.vignette', { autoAlpha: 0.25, duration: 0.6, ease: 'none' }, b(11) - 0.5)   // vignette muddies light backgrounds
+
+  // ---- 3 · PROOF (beats 11–18)
+    .add(P.lineReveal('#label3'), b(11))
+    .add(P.countUp('#count', { from: 0, to: 50000, prefix: '€', duration: b(3.5), ease: 'snap' }), b(11) + 0.2)
+    .add(P.draw('#chartPath', { duration: b(3.5), ease: 'snap' }), b(11) + 0.2)
+    .add(P.popIn('#dot', { ease: 'settle', rotate: 0, duration: 0.5 }), b(14.5) - 0.15)
+    .add(P.flash('#flash', { color: '#C8F135', opacity: 0.35, duration: 0.3 }), b(14.5))
+    .add(P.blurIn('#caption', { by: 'words', stagger: 0.06 }), b(15))
+
+  // ---- transition: push up to end card (beat 18)
+    .add(P.pushTransition('#s3', '#s4', { dir: 'up', duration: 0.7 }), b(18) - 0.6)
+    .to('.vignette', { autoAlpha: 1, duration: 0.7, ease: 'none' }, b(18) - 0.6)
+
+  // ---- 4 · END CARD (beats 18–24)
+    .fromTo('#ring', { rotate: 0, scale: 0.8 }, { rotate: 40, scale: 1, duration: b(6), ease: 'none' }, b(18) - 0.6)
+    .add(P.charCascade('#logo', { stagger: 0.06, duration: 0.8 }), b(18))
+    .add(P.lineReveal('#tag'), b(19))
+    .add(P.popIn('#cta', { ease: 'settle', rotate: -3, duration: 0.6, origin: '0% 50%' }), b(20))
+    .to('#arrow', { x: 14, duration: BEAT / 2, ease: 'sine.inOut', yoyo: true, repeat: 5 }, b(21));
+});
+</script>
+</body>
+</html>
